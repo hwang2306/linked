@@ -1,0 +1,978 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Linked - 스마트 알림장</title>
+    <style>
+        body {
+            font-family: 'Malgun Gothic', sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f7f6;
+            color: #333;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 420px; /* Typical mobile width */
+            margin: 0 auto;
+            background-color: #fff;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        header {
+            background-color: #4CAF50;
+            color: white;
+            padding: 15px 20px;
+            text-align: center;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        nav {
+            display: flex;
+            justify-content: space-around;
+            background-color: #e0e0e0;
+            padding: 10px 0;
+            border-bottom: 1px solid #ddd;
+        }
+        nav button {
+            background: none;
+            border: none;
+            padding: 10px 15px;
+            font-size: 1em;
+            cursor: pointer;
+            color: #555;
+            transition: all 0.3s ease;
+            flex-grow: 1;
+        }
+        nav button.active {
+            color: #4CAF50;
+            font-weight: bold;
+            border-bottom: 2px solid #4CAF50;
+        }
+        .tab-content {
+            padding: 20px;
+            flex-grow: 1;
+            overflow-y: auto;
+        }
+        .tab-pane {
+            display: none;
+        }
+        .tab-pane.active {
+            display: block;
+        }
+        h2 {
+            color: #4CAF50;
+            border-bottom: 2px solid #e0e0e0;
+            padding-bottom: 5px;
+            margin-top: 20px;
+            font-size: 1.3em;
+        }
+        h3 {
+            color: #333;
+            font-size: 1.1em;
+            margin-top: 15px;
+        }
+        p, ul {
+            margin-bottom: 10px;
+        }
+        ul {
+            list-style-type: none; /* 리스트 스타일 제거 */
+            margin-left: 0;
+            padding: 0;
+        }
+        li {
+            margin-bottom: 8px;
+            padding: 8px;
+            background-color: #f0fdf0; /* 연한 녹색 배경 */
+            border: 1px solid #d0edd0; /* 연한 녹색 테두리 */
+            border-radius: 5px;
+            cursor: pointer; /* 클릭 가능한 표시 */
+            transition: background-color 0.2s ease;
+        }
+        li:hover {
+            background-color: #e0ffe0; /* 호버 시 더 밝은 녹색 */
+        }
+        input[type="text"], input[type="date"], textarea, select {
+            width: calc(100% - 20px);
+            padding: 10px;
+            margin-bottom: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 12px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1.1em;
+            width: 100%;
+            margin-top: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        .event-calendar {
+            background-color: #f9f9f9;
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .ai-recommendation {
+            background-color: #e6ffe6;
+            border: 1px solid #c8e6c9;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+            font-style: italic;
+            color: #388e3c;
+        }
+        .message-box {
+            background-color: #e3f2fd;
+            border: 1px solid #bbdefb;
+            padding: 15px;
+            margin-top: 15px;
+            border-radius: 5px;
+        }
+        .recommended-phrases {
+            background-color: #fff3e0;
+            border: 1px solid #ffe0b2;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 5px;
+        }
+        .phrase-tag {
+            display: inline-block;
+            background-color: #ffcc80;
+            color: #6d4c41;
+            padding: 5px 10px;
+            border-radius: 15px;
+            margin: 5px 5px 5px 0;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .phrase-tag:hover {
+            background-color: #ffb74d;
+        }
+        .notification-item {
+            border: 1px solid #eee;
+            padding: 10px;
+            margin-bottom: 10px;
+            border-radius: 5px;
+            background-color: #fcfcfc;
+        }
+        .stats-report {
+            background-color: #e8f5e9;
+            border: 1px solid #c8e6c9;
+            padding: 15px;
+            margin-top: 20px;
+            border-radius: 5px;
+        }
+        .data-point {
+            margin-bottom: 8px;
+        }
+        .data-point strong {
+            color: #2e7d32;
+        }
+        /* Sub-menu styles */
+        .sub-menu {
+            display: none; /* Initially hidden */
+            flex-direction: column;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        .sub-menu.active {
+            display: flex;
+        }
+        .sub-menu button {
+            background-color: #f0f0f0;
+            color: #333;
+            border: 1px solid #ddd;
+            padding: 12px 15px;
+            font-size: 1em;
+            text-align: left;
+            width: 100%;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            transition: background-color 0.2s ease;
+        }
+        .sub-menu button:hover {
+            background-color: #e6e6e6;
+        }
+        .section-content {
+            display: none;
+            margin-top: 20px;
+            border-top: 1px dashed #ddd;
+            padding-top: 20px;
+        }
+        .section-content.active {
+            display: block;
+        }
+        .record-list-item {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            background-color: #f8f8f8;
+            transition: background-color 0.2s ease;
+        }
+        .record-list-item:hover {
+            background-color: #f0f0f0;
+        }
+        .record-detail {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #c0c0c0;
+            border-radius: 5px;
+            background-color: #e9ecef;
+        }
+        .record-detail h4 {
+            margin-top: 0;
+            color: #0056b3;
+        }
+        .report-section {
+            display: none;
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #cfe9cf;
+            background-color: #f0fff0;
+            border-radius: 5px;
+        }
+        .report-section.active {
+            display: block;
+        }
+        .report-item {
+            margin-bottom: 10px;
+            padding-bottom: 5px;
+            border-bottom: 1px dotted #e0e0e0;
+        }
+        .report-item:last-child {
+            border-bottom: none;
+        }
+        .emotion-counts span {
+            margin-right: 15px;
+            font-weight: bold;
+        }
+        #complaint-chart {
+            display: block; /* canvas는 기본적으로 inline이므로 block으로 설정 */
+            margin-top: 15px;
+            width: 100%;
+            height: 200px; /* 차트 높이 고정 */
+            background-color: #ffffff;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+
+        /* 새롭게 추가된 스타일 */
+        .response-list-item {
+            padding: 10px;
+            border: 1px solid #e0e0e0;
+            border-radius: 5px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            background-color: #f8f8f8;
+            transition: background-color 0.2s ease;
+        }
+        .response-list-item:hover {
+            background-color: #f0f0f0;
+        }
+        .response-detail {
+            margin-top: 15px;
+            padding: 15px;
+            border: 1px solid #a8dadc;
+            border-radius: 5px;
+            background-color: #e0f2f7;
+        }
+        .response-detail h4 {
+            margin-top: 0;
+            color: #1d3557;
+        }
+        .response-detail p {
+            margin-bottom: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            Linked
+        </header>
+        <nav>
+            <button class="tab-button active" data-tab="teacher">교사</button>
+            <button class="tab-button" data-tab="parent-student">학부모/학생</button>
+            <button class="tab-button" data-tab="school">학교</button>
+        </nav>
+
+        <div class="tab-content">
+            <div id="teacher" class="tab-pane active">
+                <h2>교사 Linked</h2>
+
+                <div id="teacher-login" class="section-content active">
+                    <h3>로그인 및 시작</h3>
+                    <div class="form-group">
+                        <label for="teacher-school">학교:</label>
+                        <input type="text" id="teacher-school" placeholder="학교명 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="teacher-grade">학년:</label>
+                        <input type="text" id="teacher-grade" placeholder="학년 입력">
+                    </div>
+                    <div class="form-group">
+                        <label for="teacher-class">반:</label>
+                        <input type="text" id="teacher-class" placeholder="반 입력">
+                    </div>
+                    <button onclick="handleLogin()">로그인</button>
+                </div>
+
+                <div class="sub-menu" id="teacher-sub-menu">
+                    <button onclick="showTeacherSection('notice-creation')">AI 추천 알림장 작성</button>
+                    <button onclick="showTeacherSection('parent-feedback')">학부모 피드백 확인</button>
+                    <button onclick="showTeacherSection('record-management')">기록 관리</button>
+                    <button onclick="showTeacherSection('work-feedback')">업무 피드백</button>
+                </div>
+
+                <div id="teacher-notice-creation" class="section-content">
+                    <h2>AI 추천 알림장 작성</h2>
+                    <div class="form-group">
+                        <label for="notice-date">알림장 작성 날짜:</label>
+                        <input type="date" id="notice-date">
+                    </div>
+                    <div class="event-calendar">
+                        <h3>학교/학년 공통 행사 달력</h3>
+                        <ul id="event-list">
+                            <li data-event-type="운동회">2025-06-10: 학교 운동회</li>
+                            <li data-event-type="체험학습">2025-06-15: 학년별 체험학습</li>
+                            <li data-event-type="공개수업">2025-06-20: 학부모 공개수업</li>
+                            <li data-event-type="현장학습">2025-06-25: 교외 현장학습</li>
+                        </ul>
+                        <p>행사를 클릭하면 AI가 문구를 추천하고 입력됩니다.</p>
+                    </div>
+                    <div class="ai-recommendation">
+                        <textarea id="ai-recommended-notice" placeholder="AI 추천 문구를 수정하거나 내용을 작성하세요." rows="5"></textarea>
+                    </div>
+                    <button onclick="alert('알림장이 완성되었습니다.')">알림장 완성</button>
+                    <h3 style="margin-top: 30px;">학부모 전송</h3>
+                    <button onclick="alert('완성된 알림장이 학부모들에게 발송되었습니다. 다문화 학부모에게는 자동으로 번역되어 전송됩니다.')">알림장 학부모 발송</button>
+                </div>
+
+                <div id="teacher-parent-feedback" class="section-content">
+                    <h2>학부모 피드백 확인</h2>
+                    <div class="notification-item">
+                        <h3>[피드백] 과제 제출 기한 문의</h3>
+                        <p>"선생님, 혹시 과제 제출 기한 연장 가능할까요?"</p>
+                        <div class="ai-recommendation">
+                            AI 민원 유형: 과제 관련 문의 (자동 분류)
+                            <br>AI 대응 멘트 추천 (어조 선택 가능):
+                            <ul>
+                                <li>"네, 가능합니다. 언제까지 제출 가능하신가요?" (친절)</li>
+                                <li>"어떤 사유로 연장이 필요하신지 알려주시면 감사하겠습니다." (공손)</li>
+                            </ul>
+                        </div>
+                        <textarea placeholder="AI 추천 멘트를 수정하거나 답변을 작성하세요." rows="3"></textarea>
+                        <button style="width: auto; padding: 8px 15px; margin-top: 10px;">답변 전송</button>
+                    </div>
+                    <p style="text-align: center; margin-top: 20px;">* 더 많은 피드백이 있습니다.</p>
+                </div>
+
+                <div id="teacher-record-management" class="section-content">
+                    <h2>기록 관리</h2>
+                    <p>작성한 알림장, 상담 기록, 민원 대응 기록이 자동 저장됩니다.</p>
+                    <button onclick="toggleRecordLists()">이전 기록 검색</button>
+
+                    <div id="record-lists" style="display: none;">
+                        <h3 style="margin-top: 20px;">이전 알림장 목록</h3>
+                        <ul id="past-notice-list">
+                            <li class="record-list-item" data-record-type="notice" data-record-id="notice1">2025-05-30: 방과후 특별활동 안내</li>
+                            <li class="record-list-item" data-record-type="notice" data-record-id="notice2">2025-05-20: 체험 학습 준비물 안내</li>
+                            <li class="record-list-item" data-record-type="notice" data-record-id="notice3">2025-05-10: 5월 가정통신문</li>
+                        </ul>
+
+                        <h3 style="margin-top: 20px;">학부모 피드백 목록</h3>
+                        <ul id="parent-feedback-list">
+                            <li class="record-list-item" data-record-type="feedback" data-record-id="feedback1">2025-05-28: 숙제 관련 문의 (학부모 홍길동)</li>
+                            <li class="record-list-item" data-record-type="feedback" data-record-id="feedback2">2025-05-15: 상담 요청 (학부모 김영희)</li>
+                            <li class="record-list-item" data-record-type="feedback" data-record-id="feedback3">2025-05-07: 등교 시간 문의 (학부모 이철수)</li>
+                        </ul>
+
+                        <div id="record-detail-view" class="record-detail" style="display: none;">
+                            <h4></h4>
+                            <p></p>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="teacher-work-feedback" class="section-content">
+                    <h2>업무 피드백</h2>
+                    <div class="stats-report">
+                        <div class="data-point">"이번 주 업무 시간을 **3시간 절약했습니다!**"</div>
+                        <div class="data-point">**알림장 작성 통계 보고서** 제공</div>
+                        <div class="data-point">**민원 작성 통계 보고서** 제공</div>
+                        <p>자세한 통계 보고서는 통계 메뉴에서 확인 가능합니다.</p>
+                    </div>
+                </div>
+            </div>
+
+            <div id="parent-student" class="tab-pane">
+                <h2>학부모/학생 Linked</h2>
+
+                <div class="sub-menu" id="parent-student-sub-menu">
+                    <button onclick="showParentStudentSection('notice-reception')">알림장 수신</button>
+                    <button onclick="showParentStudentSection('feedback-creation')">질문/피드백 작성</button>
+                    <button onclick="showParentStudentSection('teacher-response')">교사 응답 수신</button>
+                    <button onclick="showParentStudentSection('history-management')">알림장 및 피드백 기록 저장</button>
+                </div>
+
+                <div id="parent-student-notice-reception" class="section-content">
+                    <h2>알림장 수신</h2>
+                    <div class="notification-item">
+                        <h3>[알림장] 6월 10일 학교 운동회 안내</h3>
+                        <p>담임교사로부터 알림장(공지사항)을 수신, 학교 행사, 과제 제출 일정, 준비물 등을 한눈에 파악 가능합니다.</p>
+                        <p>안녕하세요. 6월 10일(화) 학교 운동회가 있습니다. 학생들이 편안하게 활동할 수 있도록 간편한 복장과 개인 물통을 지참하도록 지도 부탁드립니다.</p>
+                        <p>✅ **준비물:** 간편한 복장, 개인 물통</p>
+                        <p>✅ **날짜:** 2025년 6월 10일 (화)</p>
+                        <p>✅ **시간:** 오전 9시 ~ 오후 3시</p>
+                        <p>다국어 번역 기능: (미리 설정된 언어로 자동 번역된 알림장 확인 가능)</p>
+                        <button style="width: auto; padding: 8px 15px; margin-top: 10px;" onclick="alert('알림장 내용을 확인했습니다.')">확인</button>
+                    </div>
+                </div>
+
+                <div id="parent-student-feedback-creation" class="section-content">
+                    <h2>질문/피드백 작성</h2>
+                    <div class="message-box">
+                        <p style="font-weight: bold; text-align: center; color: #d32f2f;">
+                            “선생님도 누군가의 소중한 가족입니다. 배려와 존중의 언어로 소통할 수 있도록 함께 노력해 주세요.”
+                        </p>
+                        <textarea id="feedback-message" placeholder="궁금한 점, 요청 사항을 메시지로 작성해주세요." rows="5"></textarea>
+                        <div class="recommended-phrases">
+                            <p>추천 키워드/표현:</p>
+                            <span class="phrase-tag" onclick="addPhrase('죄송하지만 문의드려도 될까요?')">죄송하지만 문의드려도 될까요?</span>
+                            <span class="phrase-tag" onclick="addPhrase('시간 내주셔서 감사합니다.')">시간 내주셔서 감사합니다.</span>
+                            <span class="phrase-tag" onclick="addPhrase('선생님의 답변 기다리겠습니다.')">선생님의 답변 기다리겠습니다.</span>
+                            <span class="phrase-tag" onclick="addPhrase('과제 제출 기한 연장 가능할까요?')">과제 제출 기한 연장 가능할까요?</span>
+                            <span class="phrase-tag" onclick="addPhrase('진로 상담 신청하고 싶습니다.')">진로 상담 신청하고 싶습니다.</span>
+                            <span class="phrase-tag" onclick="addPhrase('교내 대회 참가 신청 방법 알려주세요!')">교내 대회 참가 신청 방법 알려주세요!</span>
+                            <span class="phrase-tag" onclick="addPhrase('교내 봉사활동 관련 문의드려요.')">교내 봉사활동 관련 문의드려요.</span>
+                        </div>
+                        <button onclick="alert('메시지가 선생님께 전송되었습니다.')">메시지 전송</button>
+                    </div>
+                </div>
+
+                <div id="parent-student-teacher-response" class="section-content">
+                    <h2>교사의 응답 수신</h2>
+                    <p>교사가 작성한 답변 목록입니다. 클릭하여 상세 내용을 확인하세요.</p>
+                    <ul id="teacher-response-list">
+                        <li class="response-list-item" data-response-id="res1">2025-06-05 10:30: 과제 제출 기한 연장 안내</li>
+                        <li class="response-list-item" data-response-id="res2">2025-06-04 15:00: 상담 요청에 대한 회신</li>
+                        <li class="response-list-item" data-response-id="res3">2025-06-03 09:15: 학교 행사 준비물 답변</li>
+                    </ul>
+
+                    <div id="response-detail-view" class="response-detail" style="display: none;">
+                        <h4></h4>
+                        <p class="response-time"></p>
+                        <p class="response-content"></p>
+                    </div>
+                </div>
+
+                <div id="parent-student-history-management" class="section-content">
+                    <h2>알림장 및 피드백 기록 저장</h2>
+                    <p>Linked를 통해 과거의 알림장 및 문의/답변 내용을 쉽게 다시 확인하여 학교 생활 히스토리를 한눈에 관리할 수 있습니다.</p>
+                    <button onclick="alert('과거 알림장 및 문의/답변 기록을 확인합니다.')">내 학교 생활 히스토리 확인</button>
+                </div>
+
+            </div>
+
+            <div id="school" class="tab-pane">
+                <h2>학교 Linked</h2>
+
+                <div class="sub-menu" id="school-sub-menu">
+                    <button onclick="showSchoolSection('schedule-registration')">학교 일정 등록</button>
+                    <button onclick="showSchoolSection('notice-auto-distribution')">알림장 자동 배포</button>
+                    <button onclick="showSchoolSection('material-management')">교내 공통 자료 관리</button>
+                    <button onclick="showSchoolSection('data-statistics')">학교 운영 데이터 통계</button>
+                </div>
+
+                <div id="school-schedule-registration" class="section-content">
+                    <h3>학교 일정 등록</h3>
+                    <div class="form-group">
+                        <label for="school-schedule-title">일정 제목:</label>
+                        <input type="text" id="school-schedule-title" placeholder="예: 학사 일정, 행사 일정">
+                    </div>
+                    <div class="form-group">
+                        <label for="school-schedule-date">일정 날짜:</label>
+                        <input type="date" id="school-schedule-date">
+                    </div>
+                    <div class="form-group">
+                        <label for="school-schedule-content">내용:</label>
+                        <textarea id="school-schedule-content" placeholder="상세 내용 입력 (공문 내용 등)"></textarea>
+                    </div>
+                    <div class="form-group">
+                        <label for="share-permission">공유 권한 설정:</label>
+                        <select id="share-permission">
+                            <option value="all">전체 공개</option>
+                            <option value="grade1">1학년만 공개</option>
+                            <option value="grade2">2학년만 공개</option>
+                            <option value="specific">특정 부서만 공개</option>
+                        </select>
+                    </div>
+                    <button onclick="alert('학교 일정이 등록되고 자동으로 교사 알림장에 반영됩니다.')">일정 등록</button>
+                </div>
+
+                <div id="school-notice-auto-distribution" class="section-content">
+                    <h2>알림장 자동 배포</h2>
+                    <p>등록된 학교 일정은 Linked 시스템을 통해 각 교사의 알림장에 자동 추천으로 반영되어 중복 입력 방지 및 교사의 작성 부담을 감소시킵니다.</p>
+                    <p>일정 변경 시 자동 알림 기능: 교사 알림장에 즉시 업데이트됩니다.</p>
+                </div>
+
+                <div id="school-material-management" class="section-content">
+                    <h2>교내 공통 자료 관리</h2>
+                    <div class="form-group">
+                        <label for="common-material-upload">자료 업로드:</label>
+                        <input type="file" id="common-material-upload">
+                    </div>
+                    <button onclick="alert('자료가 학교 전체 공유 폴더에 업로드되었습니다.')">자료 업로드</button>
+                    <p>학교 내 공통 자료(예: 가정통신문, 공문, 행사 계획서 등)를 각 부서에서 담당자가 업로드하면 업로드된 자료는 학교 전체 공유 폴더에서 확인 가능합니다.</p>
+                    <p>교사별 접근 권한 설정 및 검색 기능 지원, 자료 업데이트 시 버전 관리 및 알림이 제공됩니다.</p>
+                </div>
+
+                <div id="school-data-statistics" class="section-content">
+                    <h2>학교 운영 데이터 통계</h2>
+                    <div class="stats-report">
+                        <button onclick="showEmotionReport()">"교사 감정노동 지수" 리포트</button>
+                        <div id="emotion-report-details" class="report-section">
+                            <h3>최근 일주일 감정 지수</h3>
+                            <div id="emotion-data">
+                                </div>
+                        </div>
+
+                        <button onclick="showComplaintReport()">"민원 유형별 대응 통계" 리포트</button>
+                        <div id="complaint-report-details" class="report-section">
+                            <h3>민원 유형별 통계</h3>
+                            <canvas id="complaint-chart"></canvas>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let isLoggedIn = false; // 로그인 상태를 추적하는 변수
+
+        // AI 추천 문구 데이터 (실제 서비스에서는 서버에서 가져옴)
+        const aiRecommendations = {
+            "운동회": "다음 주 화요일(6월 10일)에는 학교 운동회가 있습니다. 학생들이 편안하게 활동할 수 있도록 간편한 복장과 개인 물통을 지참하도록 지도 부탁드립니다.",
+            "체험학습": "6월 15일(토)에는 학년별 체험학습이 예정되어 있습니다. 자세한 준비물과 집결 시간은 추후 안내될 가정통신문을 확인해주세요.",
+            "공개수업": "6월 20일(목)에는 학부모 공개수업이 진행됩니다. 자녀의 학습 활동을 참관하시고, 수업 후에는 담임교사와의 상담 시간도 마련되어 있으니 많은 참여 부탁드립니다.",
+            "현장학습": "6월 25일(수) 교외 현장학습을 실시합니다. 안전하고 즐거운 활동을 위해 개인 물품(간식, 음료, 우비 등)을 잘 챙겨주세요. 당일 학생들은 현장학습복을 착용합니다."
+        };
+
+        // 가상의 이전 기록 데이터 (교사용)
+        const pastRecords = {
+            notices: {
+                notice1: {
+                    title: "2025-05-30: 방과후 특별활동 안내",
+                    content: "안녕하세요. 5월 30일(금)부터 방과후 특별활동 신청 기간이 시작됩니다. 희망하는 학생들은 신청서를 작성하여 제출해 주시기 바랍니다. 자세한 내용은 첨부 파일을 확인해주세요."
+                },
+                notice2: {
+                    title: "2025-05-20: 체험 학습 준비물 안내",
+                    content: "다음 주 화요일(5월 27일)에 진행될 체험 학습 준비물 안내입니다. 개인 도시락, 간식, 물통, 편한 운동화 등을 준비해 주시고, 비상약이 필요한 학생은 미리 담임 선생님께 알려주세요."
+                },
+                notice3: {
+                    title: "2025-05-10: 5월 가정통신문",
+                    content: "5월 가정통신문입니다. 이번 달에는 학부모 공개수업, 현장 체험학습 등 다양한 학교 행사가 예정되어 있으니, 내용을 꼼꼼히 확인하시어 참여 부탁드립니다."
+                }
+            },
+            feedbacks: {
+                feedback1: {
+                    title: "2025-05-28: 숙제 관련 문의 (학부모 홍길동)",
+                    content: "선생님, 안녕하세요. 다름이 아니라 저희 아이가 어제 몸이 좋지 않아 숙제를 다 하지 못했는데, 제출 기한 연장이 가능할지 문의드립니다. 혹시 이번 주말까지는 제출할 수 있을 것 같습니다."
+                },
+                feedback2: {
+                    title: "2025-05-15: 상담 요청 (학부모 김영희)",
+                    content: "선생님, 안녕하세요. 김영희 학생 학부모입니다. 아이의 최근 학습 태도에 대해 상담을 요청드리고 싶습니다. 혹시 다음 주 중으로 시간 괜찮으신 때가 있을까요?"
+                },
+                feedback3: {
+                    title: "2025-05-07: 등교 시간 문의 (학부모 이철수)",
+                    content: "선생님, 안녕하세요. 이철수 학생 학부모입니다. 다름이 아니라 아이가 아침에 등교하는 시간이 너무 늦어져서 걱정입니다. 혹시 등교 시간 조정이나 지도 방법 관련해서 조언을 얻을 수 있을까요?"
+                }
+            }
+        };
+
+        // 가상의 감정 데이터 (최근 일주일)
+        const emotionData = [
+            { date: "2025-05-29", happy: 15, sad: 2 },
+            { date: "2025-05-30", happy: 18, sad: 1 },
+            { date: "2025-05-31", happy: 12, sad: 3 },
+            { date: "2025-06-01", happy: 10, sad: 0 }, /* 주말 */
+            { date: "2025-06-02", happy: 8, sad: 0 },  /* 주말 */
+            { date: "2025-06-03", happy: 16, sad: 2 },
+            { date: "2025-06-04", happy: 14, sad: 1 }
+        ];
+
+        // 가상의 민원 유형 데이터
+        const complaintTypeData = {
+            "단순 질문": 40,
+            "행정 업무": 25,
+            "학사 관련": 20,
+            "상담": 10,
+            "악성 민원": 5
+        };
+
+        // 가상의 교사 응답 데이터 (학부모/학생용)
+        const teacherResponses = {
+            res1: {
+                title: "과제 제출 기한 연장 안내",
+                time: "2025-06-05 10:30",
+                content: "안녕하세요. 과제 제출 기한은 다음 주 금요일(6월 13일)까지 연장 가능합니다. 혹시 그 전에 제출이 어려우시면 다시 알려주세요."
+            },
+            res2: {
+                title: "상담 요청에 대한 회신",
+                time: "2025-06-04 15:00",
+                content: "안녕하세요. 상담 요청 주셔서 감사합니다. 다음 주 화요일 오후 4시 또는 목요일 오후 3시가 가능합니다. 편하신 시간을 알려주시면 조율해드리겠습니다."
+            },
+            res3: {
+                title: "학교 행사 준비물 답변",
+                time: "2025-06-03 09:15",
+                content: "문의하신 학교 행사 준비물은 간편한 복장과 개인 물통입니다. 우천 시에는 우산을 지참해주시기 바랍니다."
+            }
+        };
+
+
+        document.addEventListener('DOMContentLoaded', () => {
+            const tabButtons = document.querySelectorAll('.tab-button');
+            const tabPanes = document.querySelectorAll('.tab-pane');
+            const eventList = document.getElementById('event-list');
+            const aiRecommendedNotice = document.getElementById('ai-recommended-notice');
+            const recordListsContainer = document.getElementById('record-lists');
+            const pastNoticeList = document.getElementById('past-notice-list');
+            const parentFeedbackList = document.getElementById('parent-feedback-list');
+            const recordDetailView = document.getElementById('record-detail-view');
+            const recordDetailTitle = recordDetailView.querySelector('h4');
+            const recordDetailContent = recordDetailView.querySelector('p');
+            const emotionReportDetails = document.getElementById('emotion-report-details');
+            const emotionDataDisplay = document.getElementById('emotion-data');
+            const complaintReportDetails = document.getElementById('complaint-report-details');
+            const complaintChartCanvas = document.getElementById('complaint-chart');
+
+            // 학부모/학생용 요소들
+            const teacherResponseList = document.getElementById('teacher-response-list');
+            const responseDetailView = document.getElementById('response-detail-view');
+            const responseDetailTitle = responseDetailView.querySelector('h4');
+            const responseDetailTime = responseDetailView.querySelector('.response-time');
+            const responseDetailContent = responseDetailView.querySelector('.response-content');
+
+
+            // 초기 로드 시 '교사' 탭이 활성화되어 있도록 설정
+            document.querySelector('.tab-button[data-tab="teacher"]').classList.add('active');
+            document.getElementById('teacher').classList.add('active');
+            document.getElementById('teacher-login').classList.add('active'); // 교사 탭의 로그인 화면을 기본으로 활성화
+            
+            tabButtons.forEach(button => {
+                button.addEventListener('click', () => {
+                    const targetTab = button.dataset.tab;
+
+                    tabButtons.forEach(btn => btn.classList.remove('active'));
+                    button.classList.add('active');
+
+                    tabPanes.forEach(pane => {
+                        if (pane.id === targetTab) {
+                            pane.classList.add('active');
+                            if (targetTab === 'teacher') {
+                                if (isLoggedIn) {
+                                    document.getElementById('teacher-login').classList.remove('active');
+                                    document.getElementById('teacher-sub-menu').classList.add('active');
+                                    showTeacherSection('notice-creation');
+                                } else {
+                                    document.getElementById('teacher-login').classList.add('active');
+                                    document.getElementById('teacher-sub-menu').classList.remove('active');
+                                    hideAllTeacherSectionsExcept('login');
+                                }
+                                // 다른 탭의 서브 메뉴 및 섹션 숨기기
+                                document.getElementById('parent-student-sub-menu').classList.remove('active');
+                                hideAllParentStudentSectionsExcept(null);
+                                document.getElementById('school-sub-menu').classList.remove('active');
+                                hideAllSchoolSectionsExcept(null);
+                                hideAllSchoolReportSections(); // 학교 통계 리포트 숨김
+
+                            } else if (targetTab === 'parent-student') {
+                                document.getElementById('parent-student-sub-menu').classList.add('active');
+                                showParentStudentSection('notice-reception'); // '알림장 수신'을 기본으로 활성화
+                                // 다른 탭의 서브 메뉴 및 섹션 숨기기
+                                document.getElementById('teacher-login').classList.remove('active');
+                                document.getElementById('teacher-sub-menu').classList.remove('active');
+                                hideAllTeacherSectionsExcept(null);
+                                document.getElementById('school-sub-menu').classList.remove('active');
+                                hideAllSchoolSectionsExcept(null);
+                                hideAllSchoolReportSections(); // 학교 통계 리포트 숨김
+
+                            } else if (targetTab === 'school') {
+                                document.getElementById('school-sub-menu').classList.add('active');
+                                showSchoolSection('schedule-registration'); // '학교 일정 등록'을 기본으로 활성화
+                                // 다른 탭의 서브 메뉴 및 섹션 숨기기
+                                document.getElementById('teacher-login').classList.remove('active');
+                                document.getElementById('teacher-sub-menu').classList.remove('active');
+                                hideAllTeacherSectionsExcept(null);
+                                document.getElementById('parent-student-sub-menu').classList.remove('active');
+                                hideAllParentStudentSectionsExcept(null);
+                                hideAllSchoolReportSections(); // 탭 변경 시 학교 통계 리포트 숨김
+                            }
+                        } else {
+                            pane.classList.remove('active');
+                        }
+                    });
+                });
+            });
+
+            // 이벤트 리스트 클릭 핸들러
+            if (eventList) {
+                eventList.addEventListener('click', (event) => {
+                    if (event.target.tagName === 'LI') {
+                        const eventType = event.target.dataset.eventType;
+                        const recommendedText = aiRecommendations[eventType];
+                        if (recommendedText) {
+                            aiRecommendedNotice.value = recommendedText;
+                        }
+                    }
+                });
+            }
+
+            // 이전 기록 목록 클릭 핸들러 (교사용)
+            const allRecordLists = document.querySelectorAll('#past-notice-list, #parent-feedback-list');
+            allRecordLists.forEach(list => {
+                list.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('record-list-item')) {
+                        const recordType = event.target.dataset.recordType;
+                        const recordId = event.target.dataset.recordId;
+                        let record;
+
+                        if (recordType === 'notice') {
+                            record = pastRecords.notices[recordId];
+                        } else if (recordType === 'feedback') {
+                            record = pastRecords.feedbacks[recordId];
+                        }
+
+                        if (record) {
+                            recordDetailTitle.textContent = record.title;
+                            recordDetailContent.textContent = record.content;
+                            recordDetailView.style.display = 'block';
+                        }
+                    }
+                });
+            });
+
+            // 교사 응답 목록 클릭 핸들러 (학부모/학생용)
+            if (teacherResponseList) {
+                teacherResponseList.addEventListener('click', (event) => {
+                    if (event.target.classList.contains('response-list-item')) {
+                        const responseId = event.target.dataset.responseId;
+                        const response = teacherResponses[responseId];
+
+                        if (response) {
+                            responseDetailTitle.textContent = response.title;
+                            responseDetailTime.textContent = `응답 시간: ${response.time}`;
+                            responseDetailContent.textContent = response.content;
+                            responseDetailView.style.display = 'block';
+                        }
+                    }
+                });
+            }
+
+            // 초기화 시 민원 차트 그리기 (숨겨진 상태에서도 한번 그려서 크기 조절 문제 방지)
+            drawComplaintChart();
+        });
+
+        function handleLogin() {
+            isLoggedIn = true;
+            alert('로그인되었습니다. Linked 주요 기능을 이용하실 수 있습니다.');
+            document.getElementById('teacher-login').classList.remove('active');
+            document.getElementById('teacher-sub-menu').classList.add('active');
+            showTeacherSection('notice-creation');
+        }
+
+        function showTeacherSection(sectionId) {
+            const sections = document.querySelectorAll('#teacher .section-content');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('teacher-' + sectionId).classList.add('active');
+            // 기록 관리 섹션이 아닌 경우 기록 목록 숨기기
+            if (sectionId !== 'record-management') {
+                document.getElementById('record-lists').style.display = 'none';
+                document.getElementById('record-detail-view').style.display = 'none';
+            }
+        }
+
+        function hideAllTeacherSectionsExcept(activeSectionId) {
+            const sections = document.querySelectorAll('#teacher .section-content');
+            sections.forEach(section => {
+                if (section.id !== 'teacher-' + activeSectionId) {
+                    section.classList.remove('active');
+                }
+            });
+            // 로그인 화면일 경우 기록 목록 숨김
+            if (activeSectionId === 'login') {
+                document.getElementById('record-lists').style.display = 'none';
+                document.getElementById('record-detail-view').style.display = 'none';
+            }
+        }
+
+        function showParentStudentSection(sectionId) {
+            const sections = document.querySelectorAll('#parent-student .section-content');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('parent-student-' + sectionId).classList.add('active');
+            // 교사 응답 수신 섹션이 아닌 경우 상세 보기 숨기기
+            if (sectionId !== 'teacher-response') {
+                document.getElementById('response-detail-view').style.display = 'none';
+            }
+        }
+
+        function hideAllParentStudentSectionsExcept(activeSectionId) {
+            const sections = document.querySelectorAll('#parent-student .section-content');
+            sections.forEach(section => {
+                if (section.id !== 'parent-student-' + activeSectionId) {
+                    section.classList.remove('active');
+                }
+            });
+            // 특정 섹션이 아닐 경우 상세 보기 숨김
+            if (activeSectionId !== 'teacher-response') {
+                document.getElementById('response-detail-view').style.display = 'none';
+            }
+        }
+
+        function showSchoolSection(sectionId) {
+            const sections = document.querySelectorAll('#school .section-content');
+            sections.forEach(section => {
+                section.classList.remove('active');
+            });
+            document.getElementById('school-' + sectionId).classList.add('active');
+            hideAllSchoolReportSections(); // 섹션 변경 시 모든 리포트 숨김
+        }
+
+        function hideAllSchoolSectionsExcept(activeSectionId) {
+            const sections = document.querySelectorAll('#school .section-content');
+            sections.forEach(section => {
+                if (section.id !== 'school-' + activeSectionId) {
+                    section.classList.remove('active');
+                }
+            });
+            hideAllSchoolReportSections(); // 다른 섹션 선택 시 리포트 숨김
+        }
+
+        function addPhrase(phrase) {
+            const textarea = document.getElementById('feedback-message');
+            textarea.value += phrase + ' ';
+            textarea.focus();
+        }
+
+        function toggleRecordLists() {
+            const recordLists = document.getElementById('record-lists');
+            const recordDetailView = document.getElementById('record-detail-view');
+            if (recordLists.style.display === 'none') {
+                recordLists.style.display = 'block';
+            } else {
+                recordLists.style.display = 'none';
+                recordDetailView.style.display = 'none'; // 목록 숨길 때 상세 보기도 숨김
+            }
+        }
+
+        function hideAllSchoolReportSections() {
+            document.getElementById('emotion-report-details').classList.remove('active');
+            document.getElementById('complaint-report-details').classList.remove('active');
+        }
+
+        function showEmotionReport() {
+            hideAllSchoolReportSections(); // 다른 리포트 숨기기
+            const emotionReportDetails = document.getElementById('emotion-report-details');
+            const emotionDataDisplay = document.getElementById('emotion-data');
+            emotionReportDetails.classList.add('active');
+
+            let html = '';
+            emotionData.forEach(data => {
+                html += `<div class="report-item"><strong>날짜: ${data.date}</strong><br>`;
+                html += `<span class="emotion-counts">웃는 얼굴 횟수: ${data.happy} 😊</span>`;
+                html += `<span class="emotion-counts">우는 얼굴 횟수: ${data.sad} 😢</span></div>`;
+            });
+            emotionDataDisplay.innerHTML = html;
+        }
+
+        function showComplaintReport() {
+            hideAllSchoolReportSections(); // 다른 리포트 숨기기
+            const complaintReportDetails = document.getElementById('complaint-report-details');
+            complaintReportDetails.classList.add('active');
+            // 차트 다시 그리기 (숨겨져 있다가 나타날 때 필요)
+            drawComplaintChart();
+        }
+
+        // 민원 유형별 대응 통계 차트 그리기 함수 (전역으로 이동)
+        function drawComplaintChart() {
+            const complaintChartCanvas = document.getElementById('complaint-chart');
+            const ctx = complaintChartCanvas.getContext('2d');
+            const types = Object.keys(complaintTypeData);
+            const values = Object.values(complaintTypeData);
+            const maxValue = Math.max(...values) + 10; // 여유 공간 확보
+            
+            // 해상도에 따른 캔버스 크기 조정
+            const dpi = window.devicePixelRatio || 1;
+            complaintChartCanvas.width = 380 * dpi; /* 컨테이너 너비 - 패딩 */
+            complaintChartCanvas.height = 200 * dpi;
+            ctx.scale(dpi, dpi);
+
+            const barWidth = 30;
+            const spacing = 15;
+            const startX = 40;
+            const startY = complaintChartCanvas.height / dpi - 30; // DPI 스케일링 고려
+            const chartHeight = complaintChartCanvas.height / dpi - 60;
+            const chartWidth = complaintChartCanvas.width / dpi - 60;
+
+            ctx.clearRect(0, 0, complaintChartCanvas.width / dpi, complaintChartCanvas.height / dpi);
+            ctx.font = '12px Malgun Gothic';
+            ctx.fillStyle = '#333';
+
+            // Y축 (값)
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX, startY - chartHeight);
+            ctx.strokeStyle = '#333';
+            ctx.stroke();
+
+            // Y축 눈금 및 라벨
+            const numYLabels = 5;
+            for (let i = 0; i <= numYLabels; i++) {
+                const y = startY - (chartHeight / numYLabels) * i;
+                ctx.fillText(Math.round(maxValue / numYLabels * i), startX - 30, y + 5);
+            }
+
+            // X축 (유형)
+            ctx.beginPath();
+            ctx.moveTo(startX, startY);
+            ctx.lineTo(startX + chartWidth, startY);
+            ctx.stroke();
+
+            // 막대 그리기
+            types.forEach((type, index) => {
+                const x = startX + (barWidth + spacing) * index + spacing;
+                const barHeight = (values[index] / maxValue) * chartHeight;
+
+                ctx.fillStyle = '#4CAF50'; // 막대 색상
+                ctx.fillRect(x, startY - barHeight, barWidth, barHeight);
+
+                ctx.fillStyle = '#333';
+                ctx.textAlign = 'center';
+                ctx.fillText(type, x + barWidth / 2, startY + 20); // 유형 라벨
+                ctx.fillText(values[index], x + barWidth / 2, startY - barHeight - 5); // 값
+            });
+        }
+    </script>
+</body>
+</html>
